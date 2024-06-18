@@ -26,6 +26,9 @@ public class UserMealsUtil {
         mealsTo.forEach(System.out::println);
 
         System.out.println(filteredByStreams(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
+
+        //Optional 2
+        System.out.println(filteredByRecursion(meals, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000));
     }
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
@@ -52,5 +55,23 @@ public class UserMealsUtil {
                 .filter(meal -> TimeUtil.isBetweenHalfOpen(meal.getTime(), startTime, endTime))
                 .map(meal -> new UserMealWithExcess(meal, sumCaloriesByDay.get(meal.getDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
+    }
+
+    public static List<UserMealWithExcess> filteredByRecursion(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
+        List<UserMealWithExcess> result = new ArrayList<>();
+        filterRecursion(new LinkedList<>(meals), startTime, endTime, caloriesPerDay, new HashMap<>(), result);
+        return result;
+    }
+
+    private static void filterRecursion(LinkedList<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay,
+                                        Map<LocalDate, Integer> sumCaloriesByDay, List<UserMealWithExcess> result) {
+        if (meals.isEmpty()) return;
+
+        UserMeal userMeal = meals.pop();
+        sumCaloriesByDay.merge(userMeal.getDate(), userMeal.getCalories(), Integer::sum);
+        filterRecursion(meals, startTime, endTime, caloriesPerDay, sumCaloriesByDay, result);
+        if (TimeUtil.isBetweenHalfOpen(userMeal.getTime(), startTime, endTime)) {
+            result.add(new UserMealWithExcess(userMeal, sumCaloriesByDay.get(userMeal.getDate()) > caloriesPerDay));
+        }
     }
 }
