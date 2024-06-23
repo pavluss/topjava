@@ -10,11 +10,15 @@
 <hr>
 <section>
     <h2>Meals</h2>
+    <a href="meals?action=create">Add meal</a>
+    <br><br>
     <table border="1" cellpadding="8" cellspacing="0">
         <tr>
             <th>Дата</th>
             <th>Описание</th>
             <th>Калории</th>
+            <th></th>
+            <th></th>
         </tr>
         <jsp:useBean id="mealToList" scope="request" type="java.util.List"/>
         <c:forEach items="${mealToList}" var="meal">
@@ -24,6 +28,8 @@
                 </td>
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
+                <td><a href="meals?action=update&id=${meal.id}">Update</a></td>
+                <td><a href="meals?action=delete&id=${meal.id}">Delete</a></td>
             </tr>
         </c:forEach>
     </table>
