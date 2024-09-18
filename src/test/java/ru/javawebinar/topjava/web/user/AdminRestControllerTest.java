@@ -5,17 +5,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
 import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
+import ru.javawebinar.topjava.web.ExceptionInfoHandler;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static ru.javawebinar.topjava.TestUtil.userHttpBasic;
 import static ru.javawebinar.topjava.UserTestData.*;
 
@@ -153,7 +157,7 @@ class AdminRestControllerTest extends AbstractControllerTest {
                 .with(userHttpBasic(admin)))
                 .andDo(print())
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.type").value(ErrorType.VALIDATION_ERROR.name()));
+                .andExpect(errorType(ErrorType.VALIDATION_ERROR));
     }
 
     @Test
@@ -165,7 +169,36 @@ class AdminRestControllerTest extends AbstractControllerTest {
                 .with(userHttpBasic(admin)))
                 .andDo(print())
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.type").value(ErrorType.VALIDATION_ERROR.name()));
+                .andExpect(errorType(ErrorType.VALIDATION_ERROR));
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NEVER)
+    void createDuplicateEmail() throws Exception {
+        User duplicateEmailUser = new User(null, "UserTest", user.getEmail(), "password", 100);
+        perform(MockMvcRequestBuilders.post(REST_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(admin))
+                .content(jsonWithPassword(duplicateEmailUser, "password")))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(errorType(ErrorType.VALIDATION_ERROR))
+                .andExpect(detailsMessage(ExceptionInfoHandler.EXCEPTION_DUPLICATE_EMAIL));
+    }
+
+
+    @Test
+    @Transactional(propagation = Propagation.NEVER)
+    void updateDuplicateEmail() throws Exception {
+        User newDuplicateEmailUser = new User(null, "newUser", "admin@gmail.com", "password", 100);
+        perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(admin))
+                .content(jsonWithPassword(newDuplicateEmailUser, "password")))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(errorType(ErrorType.VALIDATION_ERROR))
+                .andExpect(detailsMessage(ExceptionInfoHandler.EXCEPTION_DUPLICATE_EMAIL));
     }
 
 

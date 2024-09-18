@@ -31,10 +31,12 @@ public class ExceptionInfoHandler {
     private static final Logger log = LoggerFactory.getLogger(ExceptionInfoHandler.class);
 
 
-    private static final String EXCEPTION_DUPLICATE_EMAIL = "exception.user.duplicateEmail";
+    public static final String EXCEPTION_DUPLICATE_EMAIL = "exception.user.duplicateEmail";
+    public static final String EXCEPTION_DUPLICATE_DATETIME = "exception.meal.duplicateDateTime";
 
     private static final Map<String, String> CONSTRAINS_I18N_MAP = Map.of(
-            "users_unique_email_idx", EXCEPTION_DUPLICATE_EMAIL);
+            "users_unique_email_idx", EXCEPTION_DUPLICATE_EMAIL,
+            "meal_unique_user_datetime_idx", EXCEPTION_DUPLICATE_DATETIME);
 
     private final MessageSourceAccessor messageSourceAccessor;
 
